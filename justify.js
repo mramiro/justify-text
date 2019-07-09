@@ -15,12 +15,16 @@ const injectSpaces = (tokens, spaces) => {
   return line;
 };
 
-const sanitize = line => line.replace(/\s+/g, divider).trim();
+// Let's assume we want a sensible number of spaces before we begin:
+const normalize = line => line.replace(/\s+/g, divider).trim();
 
 const justify = (inputLine, length) => {
-  const line = sanitize(inputLine);
+  const line = normalize(inputLine);
   if (length < line.length) {
-    const left = line.substring(0, length);
+    // If the desired length is smaller than the provided string
+    // we assume that we want a multiline string as a result
+    // Note that this truncates words instead of wrapping them by spaces
+    const left = line.substring(0, length).trim();
     const right = line.substring(length).trim();
     const justified = justify(left, length) + EOL;
     if (right.length < length) {
@@ -32,8 +36,10 @@ const justify = (inputLine, length) => {
   if (tokens.length <= 1) {
     return line;
   }
-  const spaces = new Array(tokens.length - 1).fill(1);
 
+  // First we count how many spaces we'll need between words
+  // We prioritize space injection on the leftmost slots first
+  const spaces = new Array(tokens.length - 1).fill(1);
   let remaining = line.length;
   let i = 0;
   while (remaining < length) {
